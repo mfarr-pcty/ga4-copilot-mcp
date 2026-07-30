@@ -12,8 +12,16 @@ def home():
 
 @app.get("/health")
 def health():
+    import importlib.util
+
+    analytics_mcp_installed = (
+        importlib.util.find_spec("analytics_mcp")
+        is not None
+    )
+
     return {
-        "status": "healthy",
-        "project_id": os.getenv("GOOGLE_PROJECT_ID"),
-        "credentials_present": bool(os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON"))
+        "credentials_present": bool(
+            os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        ),
+        "analytics_mcp_installed": analytics_mcp_installed
     }
