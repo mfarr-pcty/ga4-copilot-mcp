@@ -1,3 +1,6 @@
+from pydantic import BaseModel
+from typing import List
+
 from fastapi import FastAPI
 from google.analytics.data_v1beta import (
     BetaAnalyticsDataClient,
@@ -7,9 +10,17 @@ from google.analytics.data_v1beta import (
     Dimension
 )
 import os
-import json
 
 app = FastAPI()
+
+class ReportRequest(BaseModel):
+    dimensions: List[str] = []
+    metrics: List[str]
+
+    start_date: str = "30daysAgo"
+    end_date: str = "today"
+
+    limit: int = 25
 
 
 @app.on_event("startup")
@@ -377,6 +388,84 @@ def organic_landing_pages():
                     .value
 
             })
+
+        return {
+            "success": True,
+            "results": results
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
+    
+@app.post("/report")
+def report(request: ReportRequest):
+
+    try:
+
+        if not request.metrics:
+            return {
+                "success": False,
+                "error": "At least one metric is required."
+            }
+
+        property_id = os.getenv(
+            "GA4_PROPERTY_ID"
+        )
+
+        client = BetaAnalyticsDataClient()
+
+        report_request = RunReportRequest(
+            property=f"properties/{property_id}",
+
+            date_ranges=[
+                DateRange(
+                    start_date=request.start_date,
+                    end_date=request.end_date
+                )
+            ],
+
+            dimensions=[
+                Dimension(name=d)
+                for d in request.dimensions
+            ],
+
+            metrics=[
+                Metric(name=m)
+                for m in request.metrics
+            ],
+
+            limit=request.limit
+        )
+
+        response = client.run_report(
+            report_request
+        )
+
+        results = []
+
+        for row in response.rows:
+
+            result = {}
+
+            for i, dimension in enumerate(
+                request.dimensions
+            ):
+                result[dimension] = (
+                    row.dimension_values[i].value
+                )
+
+            for i, metric in enumerate(
+                request.metrics
+            ):
+                result[metric] = (
+                    row.metric_values[i].value
+                )
+
+            results.append(result)
 
         return {
             "success": True,
