@@ -1,21 +1,7 @@
 from fastapi import FastAPI
-import os
 import subprocess
 
 app = FastAPI()
-
-
-@app.on_event("startup")
-def startup_event():
-    creds = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-
-    if creds:
-        with open("/tmp/service-account.json", "w") as f:
-            f.write(creds)
-
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-            "/tmp/service-account.json"
-        )
 
 
 @app.get("/")
@@ -23,26 +9,20 @@ def home():
     return {"status": "running"}
 
 
-@app.get("/health")
-def health():
-    return {
-        "credentials_present": bool(
-            os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
-        )
-    }
-
-
-@app.get("/mcp-version")
-def mcp_version():
+@app.get("/entry-points")
+def entry_points():
     try:
         result = subprocess.check_output(
-            ["pip", "show", "mcp"],
+            [
+                "cat",
+                "/opt/render/project/src/.venv/lib/python3.14/site-packages/google_analytics_mcp-2.8.4.dist-info/entry_points.txt"
+            ],
             text=True
         )
 
         return {
             "success": True,
-            "details": result
+            "entry_points": result
         }
 
     except Exception as e:
