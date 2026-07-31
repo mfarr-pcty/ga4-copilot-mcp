@@ -414,8 +414,6 @@ def organic_landing_pages():
             "error": str(e)
         }
 
-
-"""
 @app.post("/report")
 def report(request: ReportRequest):
 
@@ -512,4 +510,3 @@ def report(request: ReportRequest):
             "success": False,
             "error": str(e)
         }
-    """
