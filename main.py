@@ -20,10 +20,7 @@ def startup_event():
 
 @app.get("/")
 def home():
-    return {
-        "status": "running",
-        "service": "ga4-mcp"
-    }
+    return {"status": "running"}
 
 
 @app.get("/health")
@@ -40,39 +37,39 @@ def health():
     }
 
 
-@app.get("/credentials")
-def credentials():
+@app.get("/debug")
+def debug():
+    import subprocess
+
     try:
-        with open("/tmp/service-account.json", "r") as f:
-            creds = json.load(f)
+        result = subprocess.check_output(
+            ["pip", "show", "google-analytics-mcp"],
+            text=True
+        )
 
         return {
-            "success": True,
-            "project_id": creds.get("project_id"),
-            "client_email": creds.get("client_email")
+            "installed": True,
+            "details": result
         }
 
     except Exception as e:
         return {
-            "success": False,
+            "installed": False,
             "error": str(e)
         }
 
 
-@app.get("/ga-test")
-def ga_test():
+@app.get("/package-files")
+def package_files():
+    import subprocess
+
     try:
-        from google.analytics.data_v1beta import BetaAnalyticsDataClient
+        result = subprocess.check_output(
+            ["pip", "show", "-f", "google-analytics-mcp"],
+            text=True
+        )
 
-        client = BetaAnalyticsDataClient()
-
-        return {
-            "success": True,
-            "message": "Google Analytics client created successfully"
-        }
+        return {"files": result}
 
     except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+        return {"error": str(e)}
