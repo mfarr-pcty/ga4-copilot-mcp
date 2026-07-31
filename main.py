@@ -80,3 +80,33 @@ def transport_test():
     return {
         "results": results
     }
+
+@app.get("/run-ga4")
+def run_ga4():
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["ga4-mcp-server"],
+            capture_output=True,
+            text=True,
+            timeout=15,
+            env={
+                **os.environ,
+                "GOOGLE_APPLICATION_CREDENTIALS":
+                    "/tmp/service-account.json"
+            }
+        )
+
+        return {
+            "success": True,
+            "returncode": result.returncode,
+            "stdout": result.stdout,
+            "stderr": result.stderr
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
