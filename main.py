@@ -194,7 +194,7 @@ def server_help():
             ["ga4-mcp-server", "--help"],
             capture_output=True,
             text=True,
-            timeout=15
+            timeout=30
         )
 
         return {
