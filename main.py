@@ -4,6 +4,19 @@ import os
 app = FastAPI()
 
 
+@app.on_event("startup")
+def startup_event():
+    creds = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+
+    if creds:
+        with open("/tmp/service-account.json", "w") as f:
+            f.write(creds)
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+            "/tmp/service-account.json"
+        )
+
+
 @app.get("/")
 def home():
     return {
@@ -19,15 +32,18 @@ def health():
         "project_id": os.getenv("GOOGLE_PROJECT_ID"),
         "credentials_present": bool(
             os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+        ),
+        "google_credentials_file": os.getenv(
+            "GOOGLE_APPLICATION_CREDENTIALS"
         )
     }
 
 
 @app.get("/debug")
 def debug():
-    try:
-        import subprocess
+    import subprocess
 
+    try:
         result = subprocess.check_output(
             ["pip", "show", "google-analytics-mcp"],
             text=True
