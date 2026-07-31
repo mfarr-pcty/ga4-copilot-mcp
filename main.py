@@ -3,7 +3,8 @@ from google.analytics.data_v1beta import (
     BetaAnalyticsDataClient,
     RunReportRequest,
     DateRange,
-    Metric
+    Metric,
+    Dimension
 )
 import os
 import json
