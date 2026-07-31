@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Optional
 
 from fastapi import FastAPI
 from google.analytics.data_v1beta import (
@@ -32,7 +32,8 @@ class ReportRequest(BaseModel):
 
     limit: int = 25
 
-    filters: Optional[Dict[str, str]] = None
+    filter_field: Optional[str] = None
+    filter_value: Optional[str] = None
 
 
 @app.on_event("startup")
@@ -453,24 +454,24 @@ def report(request: ReportRequest):
             limit=request.limit
         )
 
-        # Apply optional filters
-        if request.filters:
-
-            field_name, value = next(
-                iter(request.filters.items())
-            )
+        # Apply optional filter
+        if request.filter_field and request.filter_value:
 
             report_request.dimension_filter = (
                 FilterExpression(
                     filter=Filter(
-                        field_name=field_name,
+                        field_name=request.filter_field,
 
                         string_filter=Filter.StringFilter(
-                            value=value
+                            value=request.filter_value
                         )
                     )
                 )
             )
+
+        response = client.run_report(
+            report_request
+        )
 
         response = client.run_report(
             report_request
