@@ -44,168 +44,39 @@ def health():
     }
 
 
-@app.get("/credentials")
-def credentials():
-    try:
-        with open("/tmp/service-account.json", "r") as f:
-            creds = json.load(f)
+@app.get("/transport-test")
+def transport_test():
+    tests = [
+        ["ga4-mcp-server", "--help"],
+        ["ga4-mcp-server", "--transport", "streamable-http"],
+        ["ga4-mcp-server", "--transport"],
+        ["ga4-mcp-server", "--host"],
+    ]
 
-        return {
-            "success": True,
-            "project_id": creds.get("project_id"),
-            "client_email": creds.get("client_email")
-        }
+    results = []
 
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+    for cmd in tests:
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
 
+            results.append({
+                "command": " ".join(cmd),
+                "returncode": result.returncode,
+                "stdout": result.stdout,
+                "stderr": result.stderr
+            })
 
-@app.get("/ga-test")
-def ga_test():
-    try:
-        from google.analytics.data_v1beta import (
-            BetaAnalyticsDataClient
-        )
+        except Exception as e:
+            results.append({
+                "command": " ".join(cmd),
+                "error": str(e)
+            })
 
-        client = BetaAnalyticsDataClient()
-
-        return {
-            "success": True,
-            "message": "Google Analytics client created successfully"
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@app.get("/debug")
-def debug():
-    try:
-        result = subprocess.check_output(
-            ["pip", "show", "google-analytics-mcp"],
-            text=True
-        )
-
-        return {
-            "installed": True,
-            "details": result
-        }
-
-    except Exception as e:
-        return {
-            "installed": False,
-            "error": str(e)
-        }
-
-
-@app.get("/package-files")
-def package_files():
-    try:
-        result = subprocess.check_output(
-            ["pip", "show", "-f", "google-analytics-mcp"],
-            text=True
-        )
-
-        return {
-            "success": True,
-            "files": result
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@app.get("/mcp-version")
-def mcp_version():
-    try:
-        result = subprocess.check_output(
-            ["pip", "show", "mcp"],
-            text=True
-        )
-
-        return {
-            "success": True,
-            "details": result
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@app.get("/mcp-files")
-def mcp_files():
-    try:
-        result = subprocess.check_output(
-            ["pip", "show", "-f", "mcp"],
-            text=True
-        )
-
-        return {
-            "success": True,
-            "files": result
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@app.get("/entry-points")
-def entry_points():
-    try:
-        result = subprocess.check_output(
-            [
-                "cat",
-                "/opt/render/project/src/.venv/lib/python3.14/site-packages/google_analytics_mcp-2.8.4.dist-info/entry_points.txt"
-            ],
-            text=True
-        )
-
-        return {
-            "success": True,
-            "entry_points": result
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
-
-
-@app.get("/server-help")
-def server_help():
-    try:
-        result = subprocess.run(
-            ["ga4-mcp-server", "--help"],
-            capture_output=True,
-            text=True,
-            timeout=30
-        )
-
-        return {
-            "success": True,
-            "returncode": result.returncode,
-            "stdout": result.stdout,
-            "stderr": result.stderr
-        }
-
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+    return {
+        "results": results
+    }
