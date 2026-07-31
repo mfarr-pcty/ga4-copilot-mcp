@@ -81,3 +81,83 @@ def summary():
             "success": False,
             "error": str(e)
         }
+    
+@app.get("/traffic")
+def traffic():
+
+    try:
+
+        property_id = os.getenv(
+            "GA4_PROPERTY_ID"
+        )
+
+        client = BetaAnalyticsDataClient()
+
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+
+            date_ranges=[
+                DateRange(
+                    start_date="30daysAgo",
+                    end_date="today"
+                )
+            ],
+
+            dimensions=[
+                Dimension(
+                    name="sessionSource"
+                ),
+                Dimension(
+                    name="sessionMedium"
+                )
+            ],
+
+            metrics=[
+                Metric(
+                    name="sessions"
+                ),
+                Metric(
+                    name="totalUsers"
+                )
+            ]
+        )
+
+        response = client.run_report(
+            request
+        )
+
+        results = []
+
+        for row in response.rows:
+
+            results.append({
+
+                "source":
+                    row.dimension_values[0]
+                    .value,
+
+                "medium":
+                    row.dimension_values[1]
+                    .value,
+
+                "sessions":
+                    row.metric_values[0]
+                    .value,
+
+                "users":
+                    row.metric_values[1]
+                    .value
+
+            })
+
+        return {
+            "success": True,
+            "results": results
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
