@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 import os
+import json
 
 app = FastAPI()
 
@@ -39,23 +40,20 @@ def health():
     }
 
 
-@app.get("/debug")
-def debug():
-    import subprocess
-
+@app.get("/credentials")
+def credentials():
     try:
-        result = subprocess.check_output(
-            ["pip", "show", "google-analytics-mcp"],
-            text=True
-        )
+        with open("/tmp/service-account.json", "r") as f:
+            creds = json.load(f)
 
         return {
-            "installed": True,
-            "details": result
+            "success": True,
+            "project_id": creds.get("project_id"),
+            "client_email": creds.get("client_email")
         }
 
     except Exception as e:
         return {
-            "installed": False,
+            "success": False,
             "error": str(e)
         }
