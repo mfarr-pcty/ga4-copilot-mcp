@@ -237,3 +237,71 @@ def landing_pages():
             "success": False,
             "error": str(e)
         }
+    
+@app.get("/conversions")
+def conversions():
+
+    try:
+
+        property_id = os.getenv(
+            "GA4_PROPERTY_ID"
+        )
+
+        client = BetaAnalyticsDataClient()
+
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+
+            date_ranges=[
+                DateRange(
+                    start_date="30daysAgo",
+                    end_date="today"
+                )
+            ],
+
+            dimensions=[
+                Dimension(
+                    name="eventName"
+                )
+            ],
+
+            metrics=[
+                Metric(
+                    name="eventCount"
+                )
+            ],
+
+            limit=25
+        )
+
+        response = client.run_report(
+            request
+        )
+
+        results = []
+
+        for row in response.rows:
+
+            results.append({
+
+                "event_name":
+                    row.dimension_values[0]
+                    .value,
+
+                "event_count":
+                    row.metric_values[0]
+                    .value
+
+            })
+
+        return {
+            "success": True,
+            "results": results
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
