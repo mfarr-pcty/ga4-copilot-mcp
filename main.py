@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List
+from typing import List, Dict, Optional
 
 from fastapi import FastAPI
 from google.analytics.data_v1beta import (
@@ -8,6 +8,10 @@ from google.analytics.data_v1beta import (
     DateRange,
     Metric,
     Dimension
+)
+from google.analytics.data_v1beta.types import (
+    Filter,
+    FilterExpression
 )
 import os
 
@@ -21,6 +25,8 @@ class ReportRequest(BaseModel):
     end_date: str = "today"
 
     limit: int = 25
+
+    filters: Optional[Dict[str, str]] = None
 
 
 @app.on_event("startup")
@@ -440,6 +446,25 @@ def report(request: ReportRequest):
 
             limit=request.limit
         )
+
+        # Apply optional filters
+        if request.filters:
+
+            field_name, value = next(
+                iter(request.filters.items())
+            )
+
+            report_request.dimension_filter = (
+                FilterExpression(
+                    filter=Filter(
+                        field_name=field_name,
+
+                        string_filter=Filter.StringFilter(
+                            value=value
+                        )
+                    )
+                )
+            )
 
         response = client.run_report(
             report_request
