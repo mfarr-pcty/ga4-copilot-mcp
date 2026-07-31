@@ -57,3 +57,22 @@ def credentials():
             "success": False,
             "error": str(e)
         }
+
+
+@app.get("/ga-test")
+def ga_test():
+    try:
+        from google.analytics.data_v1beta import BetaAnalyticsDataClient
+
+        client = BetaAnalyticsDataClient()
+
+        return {
+            "success": True,
+            "message": "Google Analytics client created successfully"
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e)
+        }
