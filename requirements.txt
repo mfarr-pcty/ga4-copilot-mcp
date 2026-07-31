@@ -1,4 +1,4 @@
 fastapi
 uvicorn
 google-analytics-mcp
-requests
+mcp==1.13.1
