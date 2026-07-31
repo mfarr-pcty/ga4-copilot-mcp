@@ -15,7 +15,13 @@ from google.analytics.data_v1beta.types import (
 )
 import os
 
-app = FastAPI()
+app = FastAPI(
+    servers=[
+        {
+            "url": "https://ga4-copilot-mcp.onrender.com"
+        }
+    ]
+)
 
 class ReportRequest(BaseModel):
     dimensions: List[str] = []
