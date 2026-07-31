@@ -1,20 +1,34 @@
-@app.get("/mcp-files")
-def mcp_files():
-    import subprocess
+from fastapi import FastAPI
+import os
+import json
+import subprocess
 
-    try:
-        result = subprocess.check_output(
-            ["pip", "show", "-f", "mcp"],
-            text=True
+app = FastAPI()
+
+
+@app.on_event("startup")
+def startup_event():
+    creds = os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON")
+
+    if creds:
+        with open("/tmp/service-account.json", "w") as f:
+            f.write(creds)
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+            "/tmp/service-account.json"
         )
 
-        return {
-            "success": True,
-            "files": result
-        }
 
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
+@app.get("/")
+def home():
+    return {
+        "status": "running",
+        "service": "ga4-mcp"
+    }
+
+
+@app.get("/health")
+def health():
+    return {
+        "status": "healthy",
+        "project
