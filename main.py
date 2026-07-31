@@ -162,3 +162,78 @@ def traffic():
             "success": False,
             "error": str(e)
         }
+    
+@app.get("/landing-pages")
+def landing_pages():
+
+    try:
+
+        property_id = os.getenv(
+            "GA4_PROPERTY_ID"
+        )
+
+        client = BetaAnalyticsDataClient()
+
+        request = RunReportRequest(
+            property=f"properties/{property_id}",
+
+            date_ranges=[
+                DateRange(
+                    start_date="30daysAgo",
+                    end_date="today"
+                )
+            ],
+
+            dimensions=[
+                Dimension(
+                    name="landingPagePlusQueryString"
+                )
+            ],
+
+            metrics=[
+                Metric(
+                    name="sessions"
+                ),
+                Metric(
+                    name="totalUsers"
+                )
+            ],
+
+            limit=25
+        )
+
+        response = client.run_report(
+            request
+        )
+
+        results = []
+
+        for row in response.rows:
+
+            results.append({
+
+                "landing_page":
+                    row.dimension_values[0]
+                    .value,
+
+                "sessions":
+                    row.metric_values[0]
+                    .value,
+
+                "users":
+                    row.metric_values[1]
+                    .value
+
+            })
+
+        return {
+            "success": True,
+            "results": results
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e)
+        }
