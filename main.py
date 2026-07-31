@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List
 
 from fastapi import FastAPI
 from google.analytics.data_v1beta import (
@@ -16,6 +16,9 @@ from google.analytics.data_v1beta.types import (
 import os
 
 app = FastAPI(
+    title="GA4 Analytics API",
+    version="1.0.0",
+    openapi_version="3.0.2",
     servers=[
         {
             "url": "https://ga4-copilot-mcp.onrender.com"
@@ -32,8 +35,8 @@ class ReportRequest(BaseModel):
 
     limit: int = 25
 
-    filter_field: Optional[str] = None
-    filter_value: Optional[str] = None
+    filter_field: str = ""
+    filter_value: str = ""
 
 
 @app.on_event("startup")
