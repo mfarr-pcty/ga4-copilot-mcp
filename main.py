@@ -506,3 +506,7 @@ def report(request: ReportRequest):
             "success": False,
             "error": str(e)
         }
+        
+@app.get("/mcp/summary")
+def mcp_summary():
+    return summary()
